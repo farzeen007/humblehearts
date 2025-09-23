@@ -38,7 +38,7 @@ export default function SignInForm() {
 
   const onSubmit = async (values) => {
     try {
-      const res = await api.post(`/admin/auth/login`, values, {
+      const res = await api.post(`/homecare/auth/login`, values, {
         headers: { "Content-Type": "application/json" },
       });
       showToast(res.data.message);
@@ -54,7 +54,7 @@ export default function SignInForm() {
     } catch (err) {
       if (axios.isAxiosError(err)) {
         console.log(err, "error");
-        showToast(err.response?.data?.message || "Login failed", "error");
+        showToast(err.response?.data?.message || "Login failed", "error","error");
         return;
       }
       console.error("Login error:", err);

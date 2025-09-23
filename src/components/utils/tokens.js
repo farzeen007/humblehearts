@@ -10,3 +10,6 @@ export const removeToken = () => {
 export const setRole = (value) => {
   localStorage.setItem("role", value);
 };
+export const getRole = () => {
+  return localStorage.getItem("role");
+};

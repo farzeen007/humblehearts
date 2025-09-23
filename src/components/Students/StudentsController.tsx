@@ -15,6 +15,7 @@ import {
   PencilSquareIcon,
   TrashIcon,
   EyeIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import Button from "../ui/button/Button";
 import { showToast } from "../utils/showToast";
@@ -30,6 +31,7 @@ export default function StudentsController() {
   const [modalOpen, setModalOpen] = useState(false);
   const [statusMenuOpen, setStatusMenuOpen] = useState(null);
   const [viewingStudentId, setViewingStudentId] = useState(null);
+  const [isFetchingStudent, setIsFetchingStudent] = useState(false);
   const {
     register,
     handleSubmit,
@@ -71,10 +73,24 @@ export default function StudentsController() {
     if (currentPage > 0) fetchStudents(currentPage - 1);
   };
 
-  const openEditModal = (student) => {
+  const openEditModal = async (student) => {
     setEditingStudentId(student.studentId);
-    reset(student);
     setModalOpen(true);
+    setIsFetchingStudent(true);
+    const accessToken = getToken();
+    try {
+      const res = await api.get(`/admin/student/${student.studentId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const fetchedStudent = res.data.data;
+      reset(fetchedStudent);
+    } catch (err) {
+      console.error("Error fetching student details:", err);
+      showToast("Failed to fetch student details.", "error");
+      handleCloseModal();
+    } finally {
+      setIsFetchingStudent(false);
+    }
   };
 
   const handleCloseModal = () => {
@@ -141,7 +157,6 @@ export default function StudentsController() {
     }
   };
 
-  // New functions for ViewStudentModal
   const openViewModal = (studentId) => {
     setViewingStudentId(studentId);
   };
@@ -157,7 +172,7 @@ export default function StudentsController() {
           Students
         </h3>
         <div className="flex items-center gap-3 flex-wrap">
-          <Button variant="outline">Filter</Button>
+          {/* <Button variant="outline">Filter</Button> */}
           <Button variant="outline">See All</Button>
         </div>
       </div>
@@ -220,15 +235,14 @@ export default function StudentsController() {
                           student.status === "APPROVED"
                             ? "success"
                             : student.status === "PENDING"
-                            ? "warning"
-                            : "error"
+                              ? "warning"
+                              : "error"
                         }
                       >
                         {student.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-3 flex gap-2 items-center">
-                      {/* Step 3: Add new button to view student details */}
                       <Button
                         variant="ghost"
                         onClick={() => openViewModal(student.studentId)}
@@ -241,13 +255,12 @@ export default function StudentsController() {
                       >
                         <PencilSquareIcon className="h-5 w-5" />
                       </Button>
-                      <Button
+                      {/* <Button
                         variant="ghost"
                         onClick={() => handleDeleteStudent(student.studentId)}
                       >
                         <TrashIcon className="h-5 w-5" />
-                      </Button>
-                      {/* New Status Dropdown Button */}
+                      </Button> */}
                       <div className="relative">
                         <Button
                           variant="outline"
@@ -315,283 +328,299 @@ export default function StudentsController() {
         </>
       )}
 
-      {/* Existing Edit Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={(e) => e.target === e.currentTarget && handleCloseModal()}
+        >
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl dark:bg-gray-900 dark:text-white/90 transform transition-all duration-300 scale-100 opacity-100 overflow-y-auto max-h-[90vh]">
             <div className="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-3">
               <h2 className="text-2xl font-bold">Edit Student</h2>
               <button
                 onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               >
-                &times;
+                <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            <form
-              onSubmit={handleSubmit(handleUpdateStudent)}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    {...register("fullName")}
-                    className={`mt-1 block w-full rounded-md border ${
-                      errors.fullName ? "border-red-500" : "border-gray-300"
-                    } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
-                  />
-                  {errors.fullName && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.fullName.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    {...register("email")}
-                    className={`mt-1 block w-full rounded-md border ${
-                      errors.email ? "border-red-500" : "border-gray-300"
-                    } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
-                  />
-                  {errors.email && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.email.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    {...register("password")}
-                    className={`mt-1 block w-full rounded-md border ${
-                      errors.password ? "border-red-500" : "border-gray-300"
-                    } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
-                  />
-                  {errors.password && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.password.message}
-                    </p>
-                  )}
+            {isFetchingStudent ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <div className="h-8 w-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Fetching student data...
+                </p>
+              </div>
+            ) : (
+              <form
+                onSubmit={handleSubmit(handleUpdateStudent)}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      {...register("fullName")}
+                      className={`mt-1 block w-full rounded-md border ${errors.fullName ? "border-red-500" : "border-gray-300"
+                        } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
+                    />
+                    {errors.fullName && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.fullName.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      {...register("email")}
+                      className={`mt-1 block w-full rounded-md border ${errors.email ? "border-red-500" : "border-gray-300"
+                        } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
+                    />
+                    {errors.email && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.email.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      {...register("password")}
+                      className={`mt-1 block w-full rounded-md border ${errors.password ? "border-red-500" : "border-gray-300"
+                        } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
+                    />
+                    {errors.password && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.password.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Phone
+                    </label>
+                    <input
+                      type="text"
+                      {...register("phone")}
+                      className={`mt-1 block w-full rounded-md border ${errors.phone ? "border-red-500" : "border-gray-300"
+                        } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
+                    />
+                    {errors.phone && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.phone.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Second Email
+                    </label>
+                    <input
+                      type="email"
+                      {...register("secondEmail")}
+                      className={`mt-1 block w-full rounded-md border ${errors.secondEmail ? "border-red-500" : "border-gray-300"
+                        } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
+                    />
+                    {errors.secondEmail && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.secondEmail.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Gender
+                    </label>
+                    <input
+                      type="text"
+                      {...register("gender")}
+                      className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+                    />
+                    {errors.gender && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.gender.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      {...register("dateOfBirth")}
+                      className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+                    />
+                    {errors.dateOfBirth && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.dateOfBirth.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Nationality
+                    </label>
+                    <input
+                      type="text"
+                      {...register("nationality")}
+                      className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+                    />
+                    {errors.nationality && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.nationality.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Country
+                    </label>
+                    <input
+                      type="text"
+                      {...register("country")}
+                      className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+                    />
+                    {errors.country && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.country.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      State
+                    </label>
+                    <input
+                      type="text"
+                      {...register("state")}
+                      className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+                    />
+                    {errors.state && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.state.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      {...register("city")}
+                      className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+                    />
+                    {errors.city && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.city.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      {...register("address")}
+                      className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+                    />
+                    {errors.address && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.address.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Postal Code
+                    </label>
+                    <input
+                      type="text"
+                      {...register("postalCode")}
+                      className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+                    />
+                    {errors.postalCode && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.postalCode.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Profile Image
+                    </label>
+                    {students.find((s) => s.studentId === editingStudentId)
+                      ?.img && (
+                        <div className="mt-2">
+                          <img
+                            src={
+                              students.find((s) => s.studentId === editingStudentId)
+                                ?.img
+                            }
+                            alt="Student Profile"
+                            className="h-24 w-24 rounded-full object-cover"
+                          />
+                        </div>
+                      )}
+                    <input
+                      type="file"
+                      {...register("img")}
+                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Document
+                    </label>
+                    <input
+                      type="file"
+                      {...register("document")}
+                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Phone
-                  </label>
-                  <input
-                    type="text"
-                    {...register("phone")}
-                    className={`mt-1 block w-full rounded-md border ${
-                      errors.phone ? "border-red-500" : "border-gray-300"
-                    } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
-                  />
-                  {errors.phone && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.phone.message}
-                    </p>
-                  )}
+                <div className="flex justify-end mt-6 gap-2">
+                  <Button
+                    variant="ghost"
+                    onClick={handleCloseModal}
+                    type="button"
+                    disabled={isSubmitting}
+                    className={
+                      isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                    }
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    isLoading={isSubmitting}
+                    disabled={isSubmitting}
+                    className={`transition-all duration-200 ${isSubmitting
+                        ? "bg-blue-400 text-white cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700 text-white"
+                      }`}
+                  >
+                    {isSubmitting ? "Updating..." : "Update Student"}
+                  </Button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Second Email
-                  </label>
-                  <input
-                    type="email"
-                    {...register("secondEmail")}
-                    className={`mt-1 block w-full rounded-md border ${
-                      errors.secondEmail ? "border-red-500" : "border-gray-300"
-                    } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
-                  />
-                  {errors.secondEmail && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.secondEmail.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Gender
-                  </label>
-                  <input
-                    type="text"
-                    {...register("gender")}
-                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
-                  />
-                  {errors.gender && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.gender.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Date of Birth
-                  </label>
-                  <input
-                    type="date"
-                    {...register("dateOfBirth")}
-                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
-                  />
-                  {errors.dateOfBirth && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.dateOfBirth.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Nationality
-                  </label>
-                  <input
-                    type="text"
-                    {...register("nationality")}
-                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
-                  />
-                  {errors.nationality && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.nationality.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    {...register("country")}
-                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
-                  />
-                  {errors.country && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.country.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    {...register("state")}
-                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
-                  />
-                  {errors.state && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.state.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    {...register("city")}
-                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
-                  />
-                  {errors.city && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.city.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Address
-                  </label>
-                  <input
-                    type="text"
-                    {...register("address")}
-                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
-                  />
-                  {errors.address && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.address.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Postal Code
-                  </label>
-                  <input
-                    type="text"
-                    {...register("postalCode")}
-                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
-                  />
-                  {errors.postalCode && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.postalCode.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Profile Image
-                  </label>
-                  <input
-                    type="file"
-                    {...register("img")}
-                    className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Document
-                  </label>
-                  <input
-                    type="file"
-                    {...register("document")}
-                    className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end mt-6 gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={handleCloseModal}
-                  type="button"
-                  disabled={isSubmitting}
-                  className={
-                    isSubmitting ? "opacity-50 cursor-not-allowed" : ""
-                  }
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isSubmitting}
-                  disabled={isSubmitting}
-                  className={`transition-all duration-200 ${
-                    isSubmitting
-                      ? "bg-blue-400 text-white cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
-                  }`}
-                >
-                  {isSubmitting ? "Updating..." : "Update Student"}
-                </Button>
-              </div>
-            </form>
+              </form>
+            )}
           </div>
         </div>
       )}
 
-      {/* Step 4: Conditionally render the ViewStudentModal */}
       {viewingStudentId && (
         <ViewStudentModal
           studentId={viewingStudentId}
