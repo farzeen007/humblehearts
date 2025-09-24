@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Button from "../ui/button/Button";
+import Button from "../../ui/button/Button";
 import { XCircleIcon } from "@heroicons/react/24/solid";
 
 // Zod schema for validation

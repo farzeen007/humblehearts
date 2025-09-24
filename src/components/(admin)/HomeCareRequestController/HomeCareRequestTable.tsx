@@ -1,7 +1,7 @@
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
-import Badge from "../ui/badge/Badge";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../ui/table";
+import Badge from "../../ui/badge/Badge";
 import { PencilSquareIcon, TrashIcon, EyeIcon } from "@heroicons/react/24/outline";
-import Button from "../ui/button/Button";
+import Button from "../../ui/button/Button";
 
 export default function HomeCareRequestTable({
     homecares,

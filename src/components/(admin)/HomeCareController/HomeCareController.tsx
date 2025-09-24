@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { api } from "../utils/api";
-import { getToken } from "../utils/tokens";
-import { showToast } from "../utils/showToast";
-import Button from "../ui/button/Button";
+import { api } from "../../utils/api";
+import { getToken } from "../../utils/tokens";
+import { showToast } from "../../utils/showToast";
+import Button from "../../ui/button/Button";
 import ViewHomecareModal from "./ViewHomeCareModal";
-import HomecareTable from "./HomeCareTable";
+import HomecareTable from "./HomecareTable";
 import HomecarePagination from "./HomecarePagination";
 import AddHomecareModal from "./AddHomecareModal";
 import EditHomecareModal from "./EditHomecare";

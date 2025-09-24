@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { api } from "../utils/api";
-import { getToken } from "../utils/tokens";
-import { showToast } from "../utils/showToast";
-import Button from "../ui/button/Button";
+import { api } from "../../utils/api";
+import { getToken } from "../../utils/tokens";
+import { showToast } from "../../utils/showToast";
+import Button from "../../ui/button/Button";
 import { XCircleIcon } from "@heroicons/react/24/solid";
 
 // Zod schema for validation (Assuming this schema is correct and stable)

@@ -1,4 +1,4 @@
-import Button from "../ui/button/Button";
+import Button from "../../ui/button/Button";
 
 export default function HomecarePagination({
     currentPage,

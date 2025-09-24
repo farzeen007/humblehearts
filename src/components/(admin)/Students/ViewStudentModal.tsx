@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { api } from "../utils/api";
-import { getToken } from "../utils/tokens";
-import Badge from "../ui/badge/Badge";
+import { api } from "../../utils/api";
+import { getToken } from "../../utils/tokens";
+import Badge from "../../ui/badge/Badge";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function ViewStudentModal({ studentId, onClose }) {

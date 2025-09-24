@@ -4,11 +4,11 @@ import {
   TableCell,
   TableHeader,
   TableRow,
-} from "../ui/table";
-import Badge from "../ui/badge/Badge";
+} from "../../ui/table";
+import Badge from "../../ui/badge/Badge";
 import { useEffect, useState } from "react";
-import { api } from "../utils/api";
-import { getToken } from "../utils/tokens";
+import { api } from "../../utils/api";
+import { getToken } from "../../utils/tokens";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -16,11 +16,12 @@ import {
   TrashIcon,
   EyeIcon,
   XMarkIcon,
+  CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
-import Button from "../ui/button/Button";
-import { showToast } from "../utils/showToast";
+import Button from "../../ui/button/Button";
+import { showToast } from "../../utils/showToast";
 import ViewStudentModal from "./ViewStudentModal";
-import { studentSchema } from "../utils/schema/StudentControllerSchema";
+import { studentSchema } from "../../utils/schema/StudentControllerSchema";
 
 export default function StudentsController() {
   const [students, setStudents] = useState([]);
@@ -32,6 +33,11 @@ export default function StudentsController() {
   const [statusMenuOpen, setStatusMenuOpen] = useState(null);
   const [viewingStudentId, setViewingStudentId] = useState(null);
   const [isFetchingStudent, setIsFetchingStudent] = useState(false);
+  const [availabilityModalOpen, setAvailabilityModalOpen] = useState(false);
+  const [studentAvailabilities, setStudentAvailabilities] = useState([]);
+  const [isFetchingAvailabilities, setIsFetchingAvailabilities] =
+    useState(false);
+  const [currentStudentId, setCurrentStudentId] = useState(null); // Added state to hold the current student's ID for assignment
   const {
     register,
     handleSubmit,
@@ -165,6 +171,54 @@ export default function StudentsController() {
     setViewingStudentId(null);
   };
 
+  const openAvailabilityModal = async (studentId) => {
+    setCurrentStudentId(studentId); // Set the current student's ID
+    setAvailabilityModalOpen(true);
+    setIsFetchingAvailabilities(true);
+    const accessToken = getToken();
+    try {
+      const res = await api.get(
+        `/admin/manage/student/availability/get/all/${studentId}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      setStudentAvailabilities(res.data?.data?.availabilities || []);
+    } catch (err) {
+      console.error("Error fetching availabilities:", err);
+      showToast("Failed to fetch student availabilities.", "error");
+    } finally {
+      setIsFetchingAvailabilities(false);
+    }
+  };
+
+  const closeAvailabilityModal = () => {
+    setAvailabilityModalOpen(false);
+    setStudentAvailabilities([]);
+    setCurrentStudentId(null); // Clear the current student's ID
+  };
+
+  const handleAssignToHomeCare = async (availability) => {
+    console.log(availability);
+    const accessToken = getToken();
+    try {
+      const payload = {
+        date: availability.date,
+        studentId: currentStudentId,
+        homeCareId: availability.homeCareId,
+      };
+      const res = await api.post(
+        `/admin/manage/student/availability/assign`,
+        payload,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      showToast(res.data.message, "success");
+      // Optionally, refetch availabilities to update the list
+      openAvailabilityModal(currentStudentId);
+    } catch (err) {
+      console.error("Error assigning student:", err);
+      showToast("Failed to assign student.", "error");
+    }
+  };
+
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -172,7 +226,6 @@ export default function StudentsController() {
           Students
         </h3>
         <div className="flex items-center gap-3 flex-wrap">
-          {/* <Button variant="outline">Filter</Button> */}
           <Button variant="outline">See All</Button>
         </div>
       </div>
@@ -235,8 +288,8 @@ export default function StudentsController() {
                           student.status === "APPROVED"
                             ? "success"
                             : student.status === "PENDING"
-                              ? "warning"
-                              : "error"
+                            ? "warning"
+                            : "error"
                         }
                       >
                         {student.status}
@@ -254,6 +307,12 @@ export default function StudentsController() {
                         onClick={() => openEditModal(student)}
                       >
                         <PencilSquareIcon className="h-5 w-5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => openAvailabilityModal(student.studentId)}
+                      >
+                        <CalendarDaysIcon className="h-5 w-5" />
                       </Button>
                       {/* <Button
                         variant="ghost"
@@ -363,8 +422,9 @@ export default function StudentsController() {
                     <input
                       type="text"
                       {...register("fullName")}
-                      className={`mt-1 block w-full rounded-md border ${errors.fullName ? "border-red-500" : "border-gray-300"
-                        } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
+                      className={`mt-1 block w-full rounded-md border ${
+                        errors.fullName ? "border-red-500" : "border-gray-300"
+                      } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
                     />
                     {errors.fullName && (
                       <p className="mt-1 text-xs text-red-500">
@@ -379,8 +439,9 @@ export default function StudentsController() {
                     <input
                       type="email"
                       {...register("email")}
-                      className={`mt-1 block w-full rounded-md border ${errors.email ? "border-red-500" : "border-gray-300"
-                        } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
+                      className={`mt-1 block w-full rounded-md border ${
+                        errors.email ? "border-red-500" : "border-gray-300"
+                      } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
                     />
                     {errors.email && (
                       <p className="mt-1 text-xs text-red-500">
@@ -395,8 +456,9 @@ export default function StudentsController() {
                     <input
                       type="password"
                       {...register("password")}
-                      className={`mt-1 block w-full rounded-md border ${errors.password ? "border-red-500" : "border-gray-300"
-                        } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
+                      className={`mt-1 block w-full rounded-md border ${
+                        errors.password ? "border-red-500" : "border-gray-300"
+                      } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
                     />
                     {errors.password && (
                       <p className="mt-1 text-xs text-red-500">
@@ -411,8 +473,9 @@ export default function StudentsController() {
                     <input
                       type="text"
                       {...register("phone")}
-                      className={`mt-1 block w-full rounded-md border ${errors.phone ? "border-red-500" : "border-gray-300"
-                        } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
+                      className={`mt-1 block w-full rounded-md border ${
+                        errors.phone ? "border-red-500" : "border-gray-300"
+                      } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
                     />
                     {errors.phone && (
                       <p className="mt-1 text-xs text-red-500">
@@ -427,8 +490,11 @@ export default function StudentsController() {
                     <input
                       type="email"
                       {...register("secondEmail")}
-                      className={`mt-1 block w-full rounded-md border ${errors.secondEmail ? "border-red-500" : "border-gray-300"
-                        } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
+                      className={`mt-1 block w-full rounded-md border ${
+                        errors.secondEmail
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } shadow-sm p-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700`}
                     />
                     {errors.secondEmail && (
                       <p className="mt-1 text-xs text-red-500">
@@ -562,17 +628,18 @@ export default function StudentsController() {
                     </label>
                     {students.find((s) => s.studentId === editingStudentId)
                       ?.img && (
-                        <div className="mt-2">
-                          <img
-                            src={
-                              students.find((s) => s.studentId === editingStudentId)
-                                ?.img
-                            }
-                            alt="Student Profile"
-                            className="h-24 w-24 rounded-full object-cover"
-                          />
-                        </div>
-                      )}
+                      <div className="mt-2">
+                        <img
+                          src={
+                            students.find(
+                              (s) => s.studentId === editingStudentId
+                            )?.img
+                          }
+                          alt="Student Profile"
+                          className="h-24 w-24 rounded-full object-cover"
+                        />
+                      </div>
+                    )}
                     <input
                       type="file"
                       {...register("img")}
@@ -607,10 +674,11 @@ export default function StudentsController() {
                     type="submit"
                     isLoading={isSubmitting}
                     disabled={isSubmitting}
-                    className={`transition-all duration-200 ${isSubmitting
+                    className={`transition-all duration-200 ${
+                      isSubmitting
                         ? "bg-blue-400 text-white cursor-not-allowed"
                         : "bg-blue-600 hover:bg-blue-700 text-white"
-                      }`}
+                    }`}
                   >
                     {isSubmitting ? "Updating..." : "Update Student"}
                   </Button>
@@ -626,6 +694,124 @@ export default function StudentsController() {
           studentId={viewingStudentId}
           onClose={closeViewModal}
         />
+      )}
+
+      {availabilityModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={(e) =>
+            e.target === e.currentTarget && closeAvailabilityModal()
+          }
+        >
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-4xl dark:bg-gray-900 dark:text-white/90 transform transition-all duration-300 scale-100 opacity-100 overflow-y-auto max-h-[90vh]">
+            <div className="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-3">
+              <h2 className="text-2xl font-bold">Student Availability</h2>
+              <button
+                onClick={closeAvailabilityModal}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            {isFetchingAvailabilities ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <div className="h-8 w-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Fetching availability data...
+                </p>
+              </div>
+            ) : studentAvailabilities.length > 0 ? (
+              <div className="overflow-x-auto">
+                <Table className="min-w-full">
+                  <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
+                    <TableRow>
+                      <TableCell
+                        isHeader
+                        className="py-3 font-medium text-gray-500 text-start text-sm dark:text-gray-400"
+                      >
+                        Date
+                      </TableCell>
+                      <TableCell
+                        isHeader
+                        className="py-3 font-medium text-gray-500 text-start text-sm dark:text-gray-400"
+                      >
+                        Home Care
+                      </TableCell>
+                      <TableCell
+                        isHeader
+                        className="py-3 font-medium text-gray-500 text-start text-sm dark:text-gray-400"
+                      >
+                        Status
+                      </TableCell>
+                      <TableCell
+                        isHeader
+                        className="py-3 font-medium text-gray-500 text-start text-sm dark:text-gray-400"
+                      >
+                        City
+                      </TableCell>
+                      <TableCell
+                        isHeader
+                        className="py-3 font-medium text-gray-500 text-start text-sm dark:text-gray-400"
+                      >
+                        Actions
+                      </TableCell>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+                    {studentAvailabilities.map((availability) => (
+                      <TableRow key={availability.availabilityId}>
+                        <TableCell className="py-3 text-gray-500 dark:text-white/90">
+                          {availability.date}
+                        </TableCell>
+                        <TableCell className="py-3 text-gray-500 dark:text-gray-400">
+                          {availability.homeCareName}
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <Badge
+                            size="sm"
+                            color={availability.accepted ? "success" : "error"}
+                          >
+                            {availability.accepted ? "Accepted" : "Pending"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <Badge
+                            size="sm"
+                            color={
+                              availability.assigned ? "success" : "warning"
+                            }
+                          >
+                            {availability.assigned
+                              ? "Assigned"
+                              : "Not Assigned"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-3 text-gray-500 dark:text-gray-400">
+                          {availability.city}
+                        </TableCell>
+                        {console.log(availability)}
+                        <TableCell className="py-3">
+                          <Button
+                            variant="solid"
+                            size="sm"
+                            onClick={() => handleAssignToHomeCare(availability)}
+                            disabled={availability.assigned}
+                          >
+                            Assign
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-10 text-gray-500 dark:text-gray-400">
+                No availability data found.
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

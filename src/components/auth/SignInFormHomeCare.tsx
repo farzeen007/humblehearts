@@ -22,7 +22,7 @@ const signInSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-export default function SignInForm() {
+export default function SignInFormHomeCare() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
 
@@ -38,7 +38,7 @@ export default function SignInForm() {
 
   const onSubmit = async (values) => {
     try {
-      const res = await api.post(`/admin/auth/login`, values, {
+      const res = await api.post(`/homecare/auth/login`, values, {
         headers: { "Content-Type": "application/json" },
       });
       showToast(res.data.message);
@@ -49,7 +49,7 @@ export default function SignInForm() {
         setRole(userRole);
       }
       setTimeout(() => {
-        navigate("/");
+        navigate("/student-request");
       }, 2000);
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -71,7 +71,7 @@ export default function SignInForm() {
         <div>
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Sign In as Admin
+              Sign into Home Care
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Enter your email and password to sign in!
@@ -155,18 +155,9 @@ export default function SignInForm() {
           {/* Don't have account */}
           <div className="mt-5">
             <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-              Don&apos;t have an account?{" "}
+              Have admin access?{" "}
               <Link
-                to="/signup"
-                className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
-              >
-                Sign Up
-              </Link>
-            </p>
-            <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-              Already have Home care account?{" "}
-              <Link
-                to="/signin-homecare"
+                to="/signin"
                 className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
               >
                 Sign In

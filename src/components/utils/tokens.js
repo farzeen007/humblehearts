@@ -7,6 +7,9 @@ export const setToken = (value) => {
 export const removeToken = () => {
   localStorage.removeItem("access_token");
 };
+export const removeRole = () => {
+  localStorage.removeItem("role");
+};
 export const setRole = (value) => {
   localStorage.setItem("role", value);
 };

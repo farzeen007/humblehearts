@@ -1,7 +1,7 @@
-import PageMeta from "../../components/common/PageMeta";
-import HomeCareRequestController from "../../components/HomeCareRequestController/HomeCareRequestController";
+import PageMeta from "../../../components/common/PageMeta";
+import StudentAssignedController from "../../../components/(homecare)/StudentAssignedController/StudentAssignedController";
 
-export default function HomeCareRequest() {
+export default function StudentAssigned() {
   return (
     <>
       <PageMeta
@@ -9,7 +9,7 @@ export default function HomeCareRequest() {
         description="This is React.js Ecommerce Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
       <div className="col-span-12 xl:col-span-7">
-        <HomeCareRequestController />
+        <StudentAssignedController />
       </div>
     </>
   );

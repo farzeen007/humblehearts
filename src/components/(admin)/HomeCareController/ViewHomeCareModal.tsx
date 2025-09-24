@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { api } from "../utils/api";
-import { getToken } from "../utils/tokens";
-import Badge from "../ui/badge/Badge";
+import { api } from "../../utils/api";
+import { getToken } from "../../utils/tokens";
+import Badge from "../../ui/badge/Badge";
 
 export default function ViewHomecareModal({ homecareId, onClose }) {
   const [homecare, setHomecare] = useState(null);
