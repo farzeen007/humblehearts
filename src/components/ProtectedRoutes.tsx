@@ -1,18 +1,20 @@
+// ProtectedRoute.jsx
+import { useContext } from 'react';
 import { Navigate, Outlet } from 'react-router';
-import { getRole, getToken } from './utils/tokens';
+import { AuthContext } from './common/AuthContext';
 
 const ProtectedRoute = ({ allowedRoles }) => {
-  const userRole = getRole()
-  const token = getToken()
+  const { auth } = useContext(AuthContext);
 
-  if (!userRole || !token) {
+  if (!auth.token) {
     return <Navigate to="/signin" replace />;
   }
-  if (allowedRoles && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/" replace />;
+
+  if (allowedRoles.includes(auth.role)) {
+    return <Outlet />;
   }
 
-  return <Outlet />;
+  return <Navigate to="/unauthorized" replace />;
 };
 
 export default ProtectedRoute;

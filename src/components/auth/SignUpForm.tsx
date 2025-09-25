@@ -14,7 +14,7 @@ import { showToast } from "../utils/showToast";
 const signUpSchema = z.object({
   name: z.string().min(1, "Full name is required"),
   email: z.string().email("Enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 6 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   role: z.string().min(1, "Please select a role"),
   phone: z
     .string()

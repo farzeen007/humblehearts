@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Link, redirect, useNavigate } from "react-router";
 import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
@@ -12,6 +12,7 @@ import axios from "axios";
 import { showToast } from "../utils/showToast";
 import { api } from "../utils/api";
 import { setRole, setToken } from "../utils/tokens";
+import { AuthContext } from "../common/AuthContext";
 
 // ✅ Zod Schema
 const signInSchema = z.object({
@@ -19,12 +20,13 @@ const signInSchema = z.object({
     .string()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export default function SignInFormHomeCare() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const { updateAuth } = useContext(AuthContext);
 
   const {
     register,
@@ -47,6 +49,7 @@ export default function SignInFormHomeCare() {
       if (accessToken && userRole) {
         setToken(accessToken);
         setRole(userRole);
+        updateAuth(accessToken, userRole);
       }
       setTimeout(() => {
         navigate("/student-request");

@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link, useNavigate } from "react-router";
 import { removeRole, removeToken } from "../utils/tokens";
 import { showToast } from "../utils/showToast";
+import { AuthContext } from "../common/AuthContext";
 
 export default function UserDropdown() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const { updateAuth } = useContext(AuthContext);
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -23,7 +25,9 @@ export default function UserDropdown() {
     removeRole();
     showToast("SuccessFully logged out");
     setTimeout(() => {
-      navigate("/signin");
+      updateAuth(null, null);
+
+      navigate("/signin", { replace: true });
     }, 1000);
   };
   return (
@@ -36,7 +40,7 @@ export default function UserDropdown() {
           <img src="/images/user/owner.jpg" alt="User" />
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">Musharof</span>
+        <span className="block mr-1 font-medium text-theme-sm">User</span>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
@@ -60,18 +64,18 @@ export default function UserDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
+        className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-1 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
       >
-        <div>
+        {/* <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
             Musharof Chowdhury
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
             randomuser@pimjo.com
           </span>
-        </div>
+        </div> */}
 
-        <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
+        {/* <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
           <li>
             <DropdownItem
               onItemClick={closeDropdown}
@@ -147,7 +151,7 @@ export default function UserDropdown() {
               Support
             </DropdownItem>
           </li>
-        </ul>
+        </ul> */}
         <button
           onClick={handleLogout}
           // to="/signin"

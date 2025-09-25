@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-
-// Assume these icons are imported from an icon library
 import {
   BoxCubeIcon,
   CalenderIcon,
@@ -17,7 +15,7 @@ import {
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
-import { getRole } from "../components/utils/tokens";
+import { AuthContext } from "../components/common/AuthContext"; // ⬅️ Import AuthContext
 
 type NavItem = {
   name: string;
@@ -26,125 +24,60 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const role = getRole();
-const navItems: NavItem[] = [
-  ...(role === "SUPER_ADMIN" || role === "ADMIN"
-    ? [
-        {
-          icon: <GridIcon />,
-          name: "Dashboard",
-          subItems: [
-            { name: "Students", path: "/", pro: false },
-            // {
-            //   name: "Student Availability",
-            //   path: "/student-availablity",
-            //   pro: false,
-            // },
-          ],
-        },
-        { icon: <CalenderIcon />, name: "Home Care", path: "/homecare" },
-        {
-          icon: <CalenderIcon />,
-          name: "Home Care Request",
-          path: "/homecare-request",
-        },
-      ]
-    : role === "HOME_CARE"
-    ? [
-        {
-          icon: <GridIcon />,
-          name: "Student Manage",
-          subItems: [
-            {
-              name: "Student Request",
-              path: "/student-request",
-              pro: false,
-            },
-            {
-              name: "Student Assigned",
-              path: "/student-assigned",
-              pro: false,
-            },
-          ],
-        },
-      ]
-    : []), // This empty array is the "else" condition for all other roles
-];
-// {
-//   icon: <CalenderIcon />,
-//   name: "Home Care Request",
-//   path: "/homecare-request",
-// },
-// {
-//   icon: <UserCircleIcon />,
-//   name: "User Profile",
-//   path: "/profile",
-// },
-// {
-//   name: "Forms",
-//   icon: <ListIcon />,
-//   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-// },
-// {
-//   name: "Tables",
-//   icon: <TableIcon />,
-//   subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-// },
-// {
-//   name: "Pages",
-//   icon: <PageIcon />,
-//   subItems: [
-//     { name: "Blank Page", path: "/blank", pro: false },
-//     { name: "404 Error", path: "/error-404", pro: false },
-//   ],
-// },
-// ];
-
-const othersItems: NavItem[] = [
-  // {
-  //   icon: <PieChartIcon />,
-  //   name: "Charts",
-  //   subItems: [
-  //     { name: "Line Chart", path: "/line-chart", pro: false },
-  //     { name: "Bar Chart", path: "/bar-chart", pro: false },
-  //   ],
-  // },
-  // {
-  //   icon: <BoxCubeIcon />,
-  //   name: "UI Elements",
-  //   subItems: [
-  //     { name: "Alerts", path: "/alerts", pro: false },
-  //     { name: "Avatar", path: "/avatars", pro: false },
-  //     { name: "Badge", path: "/badge", pro: false },
-  //     { name: "Buttons", path: "/buttons", pro: false },
-  //     { name: "Images", path: "/images", pro: false },
-  //     { name: "Videos", path: "/videos", pro: false },
-  //   ],
-  // },
-  // {
-  //   icon: <PlugInIcon />,
-  //   name: "Authentication",
-  //   subItems: [
-  //     { name: "Sign In", path: "/signin", pro: false },
-  //     { name: "Sign Up", path: "/signup", pro: false },
-  //   ],
-  // },
-];
-
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
+  const { auth } = useContext(AuthContext); // ⬅️ Get the user's role from AuthContext
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
-  );
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => location.pathname === path;
+  // Define navItems dynamically based on the current user's role from context
+  const navItems: NavItem[] = [
+    ...(auth.role === "SUPER_ADMIN" || auth.role === "ADMIN"
+      ? [
+          {
+            icon: <GridIcon />,
+            name: "Dashboard",
+            subItems: [
+              { name: "Students", path: "/", pro: false },
+            ],
+          },
+          { icon: <CalenderIcon />, name: "Home Care", path: "/homecare" },
+          {
+            icon: <CalenderIcon />,
+            name: "Home Care Request",
+            path: "/homecare-request",
+          },
+        ]
+      : auth.role === "HOME_CARE"
+      ? [
+          {
+            icon: <GridIcon />,
+            name: "Student Manage",
+            subItems: [
+              {
+                name: "Student Request",
+                path: "/student-request",
+                pro: false,
+              },
+              {
+                name: "Student Assigned",
+                path: "/student-assigned",
+                pro: false,
+              },
+            ],
+          },
+        ]
+      : []),
+  ];
+
+  const othersItems: NavItem[] = [];
+
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]
@@ -217,7 +150,7 @@ const AppSidebar: React.FC = () => {
               }`}
             >
               <span
-                className={`menu-item-icon-size  ${
+                className={`menu-item-icon-size  ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
@@ -407,7 +340,6 @@ const AppSidebar: React.FC = () => {
             </div>
           </div>
         </nav>
-        {/* {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null} */}
       </div>
     </aside>
   );
